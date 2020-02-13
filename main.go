@@ -13,8 +13,13 @@ import (
 func main() {
 
 	var wg sync.WaitGroup
-
+	var mutex = &sync.Mutex{}
 	
+	var counter = map[string]int{
+		"info.log": 0,
+		"warning.log": 0,
+		"error.log": 0,
+	}
 	
 	infoChan := make(chan string)
 	warningChan := make(chan string)
@@ -22,9 +27,9 @@ func main() {
 
 	wg.Add(4)
 	
-	go process(infoChan, &wg, "info.log")
-	go process(warningChan, &wg, "warning.log")
-	go process(errorChan, &wg, "error.log")
+	go process(infoChan, &wg, "info.log", counter, mutex)
+	go process(warningChan, &wg, "warning.log",counter,  mutex)
+	go process(errorChan, &wg, "error.log", counter, mutex)
 
 
 
@@ -67,11 +72,13 @@ func main() {
 }()
 
 	wg.Wait()	
+	fmt.Println(counter)
 
 }
 
-func process(requests chan string, wg *sync.WaitGroup, file string) {
+func process(requests chan string, wg *sync.WaitGroup, file string, counter map[string]int, mutex *sync.Mutex) {
 	var count int
+	total := 0
 	defer wg.Done()
 	f, err := os.OpenFile(file, os.O_CREATE|os.O_RDWR, 0666);
 	if err != nil {
@@ -89,10 +96,12 @@ func process(requests chan string, wg *sync.WaitGroup, file string) {
 			return
 		}
 		count ++
+		mutex.Lock()
+		counter[file] = count
+		mutex.Unlock()
 		// flush every N lines
 		if count%2000 == 0 {
 			w.Flush()
-			fmt.Println("flushing!", file)
 		}
 	}
 
