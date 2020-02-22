@@ -20,13 +20,13 @@ func main() {
 		"warning.log": 0,
 		"error.log": 0,
 	}
-	
+
 	infoChan := make(chan string)
 	warningChan := make(chan string)
 	errorChan := make(chan string)
 
 	wg.Add(4)
-	
+
 	go process(infoChan, &wg, "info.log", counter, mutex)
 	go process(warningChan, &wg, "warning.log",counter,  mutex)
 	go process(errorChan, &wg, "error.log", counter, mutex)
@@ -71,14 +71,13 @@ func main() {
 	close(errorChan)
 }()
 
-	wg.Wait()	
+	wg.Wait()
 	fmt.Println(counter)
 
 }
 
 func process(requests chan string, wg *sync.WaitGroup, file string, counter map[string]int, mutex *sync.Mutex) {
 	var count int
-	total := 0
 	defer wg.Done()
 	f, err := os.OpenFile(file, os.O_CREATE|os.O_RDWR, 0666);
 	if err != nil {
@@ -88,7 +87,7 @@ func process(requests chan string, wg *sync.WaitGroup, file string, counter map[
 	w := bufio.NewWriter(f)
 
 	for item := range requests {
-		
+
 		_, err := w.WriteString(item+"\n")
 		if err != nil {
 			fmt.Println(err)
@@ -111,76 +110,3 @@ func process(requests chan string, wg *sync.WaitGroup, file string, counter map[
 
 
 }
-/*
-func infoProcess(requests chan string, wg *sync.WaitGroup) {
-	defer wg.Done()
-	f, err := os.OpenFile("info.log", os.O_CREATE|os.O_RDWR, 0666);
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	w := bufio.NewWriter(f)
-
-	for item := range requests {
-		_, err := w.WriteString(item+"\n")
-		if err != nil {
-			fmt.Println(err)
-			f.Close()
-			return
-		}
-		// flush every N lines
-		w.Flush()
-	}
-
-	defer f.Close()
-
-}
-
-func warningProcess(requests chan string, wg *sync.WaitGroup) {
-	defer wg.Done()
-	f, err := os.OpenFile("warning.log", os.O_CREATE|os.O_RDWR, 0666);
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	w := bufio.NewWriter(f)
-
-	for item := range requests {
-		_, err := w.WriteString(item+"\n")
-		if err != nil {
-			fmt.Println(err)
-			f.Close()
-			return
-		}
-		//fmt.Println(n4, "bytes written successfully")
-		w.Flush()
-	}
-
-	defer f.Close()
-
-}
-
-func errorProcess(requests chan string, wg *sync.WaitGroup) {
-	defer wg.Done()
-	f, err := os.OpenFile("error.log", os.O_CREATE|os.O_RDWR, 0666);
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	w := bufio.NewWriter(f)
-
-	for item := range requests {
-		_, err := w.WriteString(item+"\n")
-		if err != nil {
-			fmt.Println(err)
-			f.Close()
-			return
-		}
-		//fmt.Println(n4, "bytes written successfully")
-		w.Flush()
-	}
-
-	defer f.Close()
-
-}
-*/
